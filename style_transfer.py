@@ -3,10 +3,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torchvision.models import vgg19, vgg16
+from torchvision.models import vgg19
 import torchvision.transforms as transforms
-import asyncio
-
 import Net
 
 
@@ -19,7 +17,7 @@ def get_gram_matrix(img, normalize=False):
     img = img.view(b*c, h*w)
     gram = torch.mm(img, img.t())
     if normalize:
-        gram.div(b*c*h*w)
+        gram = gram.div(b*c*h*w)
     return gram
      
 
@@ -46,6 +44,40 @@ def get_features(img, model, layers=None):
 
     return features
 
+class Normalization(nn.Module):
+    def __init__(self, device, mean = torch.tensor([0.485, 0.456, 0.406]), std=torch.tensor([0.229, 0.224, 0.225])):
+        super(Normalization, self).__init__()
+        # .view the mean and std to make them [C x 1 x 1] so that they can
+        # directly work with image Tensor of shape [B x C x H x W].
+        # B is batch size. C is number of channels. H is height and W is width.
+        self.device =device 
+        self.mean = torch.tensor(mean.to(device)).view(-1, 1, 1)
+        self.std = torch.tensor(std.to(device)).view(-1, 1, 1)
+
+    def forward(self, img):
+        # normalize ``img``
+        return (img - self.mean) / self.std
+
+class ContentLoss(nn.Module):
+
+    def __init__(self, target,):
+        super(ContentLoss, self).__init__()
+        self.target = target.detach()
+
+    def forward(self, input):
+        self.loss = F.mse_loss(input, self.target)
+        return input
+
+class StyleLoss(nn.Module):
+
+    def __init__(self, target_feature):
+        super(StyleLoss, self).__init__()
+        self.target = get_gram_matrix(target_feature, normalize=True).detach()
+
+    def forward(self, input):
+        G = get_gram_matrix(input, normalize=True)
+        self.loss = F.mse_loss(G, self.target)
+        return input
 
 
 
@@ -142,40 +174,6 @@ class Photorealistic_Style_transfer:
 
 
 
-class Normalization(nn.Module):
-    def __init__(self, device, mean = torch.tensor([0.485, 0.456, 0.406]), std=torch.tensor([0.229, 0.224, 0.225])):
-        super(Normalization, self).__init__()
-        # .view the mean and std to make them [C x 1 x 1] so that they can
-        # directly work with image Tensor of shape [B x C x H x W].
-        # B is batch size. C is number of channels. H is height and W is width.
-        self.device =device 
-        self.mean = torch.tensor(mean.to(device)).view(-1, 1, 1)
-        self.std = torch.tensor(std.to(device)).view(-1, 1, 1)
-
-    def forward(self, img):
-        # normalize ``img``
-        return (img - self.mean) / self.std
-
-class ContentLoss(nn.Module):
-
-    def __init__(self, target,):
-        super(ContentLoss, self).__init__()
-        self.target = target.detach()
-
-    def forward(self, input):
-        self.loss = F.mse_loss(input, self.target)
-        return input
-
-class StyleLoss(nn.Module):
-
-    def __init__(self, target_feature):
-        super(StyleLoss, self).__init__()
-        self.target = get_gram_matrix(target_feature, normalize=True).detach()
-
-    def forward(self, input):
-        G = get_gram_matrix(input, normalize=True)
-        self.loss = F.mse_loss(G, self.target)
-        return input
 
 
 class Art_Style_transfer:
@@ -247,8 +245,7 @@ class Art_Style_transfer:
         optimizer = optim.LBFGS([input_img]) 
         return optimizer
 
-    def __get_scheduler(self, optimizer):
-        return optim.lr_scheduler.StepLR(optimizer, step_size=200, gamma=0.9)        
+      
 
  
 
@@ -257,7 +254,6 @@ class Art_Style_transfer:
         target = self.content_img.clone().to(self.device)
         target.requires_grad_(True)
         optimizer = self.__get_optimizer(target)
-        scheduler = self.__get_scheduler(optimizer)
         model, style_losses, content_losses = self.__get_style_model_and_losses()
         model.eval()
         model.requires_grad_(False)
@@ -284,7 +280,7 @@ class Art_Style_transfer:
                 return style_score + content_score
 
             optimizer.step(closure) 
-            scheduler.step()   
+               
         with torch.no_grad():
             target.clamp_(0, 1)
         return target

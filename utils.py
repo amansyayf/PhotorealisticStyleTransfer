@@ -5,8 +5,6 @@ import torch
 import torchvision.transforms as transforms
 from PIL import Image
 from io import BytesIO
-from PIL import Image
-import PIL
 import config
 from aiogram import Bot
 import style_transfer as st
@@ -14,7 +12,7 @@ import asyncio
 
 
 
-def img_to_torch(path, size = 300):
+def img_to_tensor(path, size = 300):
     img = Image.open(path)
 
     if size is not None:
@@ -42,8 +40,8 @@ def tensor_to_img(image, normalize = True):
 
 
 def make_photorealistic_style_transfer(*imgs):
-    content_img = img_to_torch(imgs[0])
-    style_img = img_to_torch(imgs[1])
+    content_img = img_to_tensor(imgs[0])
+    style_img = img_to_tensor(imgs[1])
 
     style_transfer = st.Photorealistic_Style_transfer(content_img, style_img)
     output_img = style_transfer.transfer()
@@ -52,8 +50,8 @@ def make_photorealistic_style_transfer(*imgs):
 
 
 def make_art_style_transfer(*imgs):
-    content_img = img_to_torch(imgs[0])
-    style_img = img_to_torch(imgs[1])
+    content_img = img_to_tensor(imgs[0])
+    style_img = img_to_tensor(imgs[1])
 
     style_transfer = st.Art_Style_transfer(content_img, style_img)
     output_img = style_transfer.transfer()

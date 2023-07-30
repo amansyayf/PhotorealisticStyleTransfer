@@ -4,4 +4,5 @@ Repository of Telegram bot capable of Artistic and Photorealistic style transfer
 
 # Neural Style Transfer Results
 
-![](https://github.com/amansyayf/PhotorealisticStyleTransfer/blob/0daed0f8b208912cd5755308a951681986513106/images/Art%20style%20transfer.png)
+![Art style transfer](https://github.com/amansyayf/PhotorealisticStyleTransfer/blob/0daed0f8b208912cd5755308a951681986513106/images/Art%20style%20transfer.png)
+![Photorealistic style transfer](https://github.com/amansyayf/PhotorealisticStyleTransfer/blob/494907bd6efec921fdd321404b24a0a9b8e00621/images/Photorealistic%20style%20transfer.png)

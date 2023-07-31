@@ -11,15 +11,14 @@ import style_transfer as st
 import asyncio
 
 
-
-def img_to_tensor(path, size = 300):
+def img_to_tensor(path, size=300):
     img = Image.open(path)
 
     if size is not None:
-      img = img.resize((size, size))
+        img = img.resize((size, size))
 
     transform = transforms.Compose([
-      transforms.ToTensor()
+        transforms.ToTensor()
     ])
 
     img = transform(img)
@@ -27,14 +26,15 @@ def img_to_tensor(path, size = 300):
 
     return img
 
-def tensor_to_img(image, normalize = True):
+
+def tensor_to_img(image):
 
     image = image.to('cpu').detach().squeeze(0)
-    
+
     image = image.numpy()
     image = image.transpose(1, 2, 0)
-    if normalize:
-      image = image * np.array((0.229, 0.224, 0.225)) + np.array((0.485, 0.456, 0.406))
+    image = image * np.array((0.229, 0.224, 0.225)) + \
+        np.array((0.485, 0.456, 0.406))
     image = Image.fromarray((image * 255).astype(np.uint8))
     image.save('result.jpg')
 
@@ -56,9 +56,4 @@ def make_art_style_transfer(*imgs):
     style_transfer = st.Art_Style_transfer(content_img, style_img)
     output_img = style_transfer.transfer()
 
-    tensor_to_img(output_img, normalize=False)
-
- 
-
-    
-
+    tensor_to_img(output_img)
